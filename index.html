@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Экспертная система магазина</title>
+<style>
+body {
+  font-family: Arial, sans-serif;
+  max-width: 720px;
+  margin: 40px auto;
+  padding: 20px;
+  background: #f3f5f7;
+  color: #202938;
+}
+main {
+  background: white;
+  padding: 28px;
+  border-radius: 14px;
+}
+.question {
+  padding: 15px 0;
+  border-bottom: 1px solid #ddd;
+}
+label { margin-right: 20px; }
+button {
+  margin-top: 22px;
+  padding: 12px 20px;
+  border: 0;
+  border-radius: 8px;
+  background: #2459a9;
+  color: white;
+  cursor: pointer;
+}
+#result {
+  margin-top: 22px;
+  padding: 18px;
+  border-radius: 8px;
+  background: #edf2f8;
+  line-height: 1.5;
+}
+</style>
+</head>
+<body>
+<main>
+<h1>Экспертная система</h1>
+<p>Определение необходимости пополнения
+товарного запаса розничного магазина.</p>
+
+<form id="expertForm">
+<div id="questions"></div>
+<button type="submit">Получить заключение</button>
+<button type="reset">Сбросить ответы</button>
+</form>
+
+<div id="result" hidden aria-live="polite"></div>
+</main>
+
+<script>
+const questions = [
+  "Остаток ниже минимального уровня?",
+  "Запаса недостаточно до следующей поставки?",
+  "Скорость продаж соответствует критерию?",
+  "Поставщик доставит товар в срок?",
+  "Товар разрешён к продаже и заказу?"
+];
+
+const container = document.getElementById("questions");
+
+questions.forEach((question, i) => {
+  const section = document.createElement("section");
+  section.className = "question";
+  section.innerHTML = `
+    <p><strong>${i + 1}. ${question}</strong></p>
+    <label><input type="radio" name="q${i}" value="yes" required> Да</label>
+    <label><input type="radio" name="q${i}" value="no" required> Нет</label>
+  `;
+  container.appendChild(section);
+});
+
+document.getElementById("expertForm")
+.addEventListener("submit", function(event) {
+  event.preventDefault();
+
+  const answers = questions.map((_, i) =>
+    new FormData(this).get("q" + i)
+  );
+
+  let conclusion;
+
+  if (answers.every(a => a === "yes")) {
+    conclusion = "Все пять условий выполнены. Рекомендуется сформировать заявку на пополнение товарного запаса.";
+  } else if (answers[4] === "no") {
+    conclusion = "Проверьте статус товара. До выяснения обстоятельств не формируйте стандартную заявку.";
+  } else if (answers[3] === "no") {
+    conclusion = "Поставка в срок невозможна. Рассмотрите альтернативного поставщика или другие сроки.";
+  } else if (answers[0] === "no" && answers[1] === "no") {
+    conclusion = "Немедленное пополнение по заданным критериям не требуется.";
+  } else if (answers[1] === "no") {
+    conclusion = "Проверьте минимальный запас и прогноз спроса перед заказом.";
+  } else if (answers[2] === "no") {
+    conclusion = "Проанализируйте динамику продаж и прогноз спроса.";
+  } else {
+    conclusion = "Уточните потребность, остатки и условия поставки.";
+  }
+
+  const result = document.getElementById("result");
+  result.textContent = "Заключение системы: " + conclusion;
+  result.hidden = false;
+});
+
+document.getElementById("expertForm")
+.addEventListener("reset", () => {
+  const result = document.getElementById("result");
+  result.hidden = true;
+  result.textContent = "";
+});
+</script>
+</body>
+</html>
